@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bài 1: Lập trình trên máy ảo đám mây đầu tiên - 2224801030280</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.6;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 24px;
+      color: #1f2937;
+      background-color: #f9fafb;
+    }
+    h1, h2 { color: #111827; }
+    h1 { border-bottom: 2px solid #2563eb; padding-bottom: 8px; }
+    .card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+    th, td {
+      border: 1px solid #d1d5db;
+      padding: 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background-color: #eff6ff;
+      color: #1e40af;
+      font-weight: 600;
+    }
+    tr:nth-child(even) { background-color: #f8fafc; }
+    ul { padding-left: 20px; }
+    li { margin-bottom: 10px; }
+    code {
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Bài 1: Lập trình trên máy ảo đám mây đầu tiên</h1>
+  <p><strong>Họ và tên:</strong> Lưu Tấn Lợi — <strong>MSSV:</strong> 2224801030280</p>
+
+  <div class="card">
+    <h2>1. Bảng đo và so sánh môi trường (Bước 5)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Tiêu chí</th>
+          <th>Máy cá nhân</th>
+          <th>GitHub Codespace</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Thời gian từ lúc bắt đầu đến khi chạy được <code>node -v</code></strong></td>
+          <td>Khoảng 10 – 15 phút (tải bộ cài Node.js, chạy cài đặt, cấu hình biến môi trường PATH).</td>
+          <td>Khoảng 45 – 75 giây (từ lúc bấm <em>Create codespace on main</em> đến khi terminal sẵn sàng, Node.js đã cài sẵn).</td>
+        </tr>
+        <tr>
+          <td><strong>Số CPU, RAM (từ API)</strong></td>
+          <td>8 CPUs, 16.0 GB RAM.</td>
+          <td>2 CPUs (<code>cpus: 2</code>), 7.8 GB RAM (<code>memoryGB: 7.8</code>).</td>
+        </tr>
+        <tr>
+          <td><strong>Hệ điều hành</strong></td>
+          <td>Windows 11 (<code>Windows_NT 10.0.22631</code>).</td>
+          <td>Linux (<code>Linux 6.5.0-1025-azure</code> — container trên hạ tầng Azure).</td>
+        </tr>
+        <tr>
+          <td><strong>Cách truy cập từ thiết bị khác</strong></td>
+          <td>Phải chung mạng LAN, mở cổng trên Windows Firewall hoặc cài thêm công cụ tạo tunnel như ngrok.</td>
+          <td>Chuyển cổng 3000 sang <strong>Public</strong> trong tab Ports và mở trực tiếp URL <code>https://&lt;tên&gt;-3000.app.github.dev</code> trên điện thoại.</td>
+        </tr>
+        <tr>
+          <td><strong>Chi phí, đo bằng gì</strong></td>
+          <td>Chi phí mua máy ban đầu (CAPEX) và tiền điện tiêu thụ (kWh); không tự động đo theo phiên code.</td>
+          <td>Miễn phí trong hạn mức 120 core-giờ/tháng; đo lường tự động bằng <strong>core-hours</strong> (số nhân CPU × giờ chạy) và <strong>GB-month</strong> lưu trữ.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>2. Đối chiếu 5 đặc tính điện toán đám mây của NIST (Bước 6)</h2>
+    <ul>
+      <li><strong>Tự phục vụ theo yêu cầu (On-demand self-service):</strong> Sinh viên tự bấm nút <em>Create codespace on main</em> để khởi tạo máy ảo ngay lập tức mà không cần chờ quản trị viên phòng máy cấp phát.</li>
+      <li><strong>Truy cập mạng rộng (Broad network access):</strong> Lập trình trực tiếp trên trình duyệt web và dùng điện thoại truy cập API qua URL HTTPS công khai bằng mạng 4G/Wi-Fi.</li>
+      <li><strong>Gộp tài nguyên (Resource pooling):</strong> Máy ảo được cấp phát động từ cụm máy chủ chung của GitHub/Azure (thể hiện qua định danh <code>host</code> ngẫu nhiên và nhân Linux Azure).</li>
+      <li><strong>Co giãn nhanh (Rapid elasticity):</strong> Cấp phát môi trường hoàn chỉnh trong chưa đầy 2 phút và giải phóng tài nguyên tính toán ngay lập tức khi bấm <em>Stop codespace</em>.</li>
+      <li><strong>Dịch vụ đo lường được (Measured service):</strong> Hệ thống tự động đo đếm chính xác số <em>core-hours</em> và dung lượng lưu trữ tiêu thụ trong mục <em>Settings → Billing → Usage</em>.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>3. Trả lời câu hỏi phản biện</h2>
+    <p><strong>Câu 1: Gọi <code>GET /</code> hai lần cách nhau một ngày (sau khi Stop rồi Start lại codespace). Trường <code>host</code> có đổi không? Điều đó nói gì về việc máy ảo được cấp từ một kho tài nguyên chung?</strong></p>
+    <p>Khi Stop rồi Start lại cùng một Codespace, chuỗi <code>host</code> của container thường giữ nguyên do gắn với cấu hình đĩa lưu trữ của phiên đó, nhưng thời gian chạy <code>uptimeSec</code> bị đặt lại từ đầu vì bộ xử lý và bộ nhớ RAM thực chất được thu hồi về kho tài nguyên chung (Resource Pooling) lúc tắt máy và cấp phát lại từ cụm máy chủ vật lý khi bật lên. Nếu xóa và tạo mới Codespace, giá trị <code>host</code> sẽ đổi hoàn toàn.</p>
+
+    <p><strong>Câu 2: Codespaces là IaaS, PaaS hay SaaS? Lập luận bằng việc ai quản lý hệ điều hành, runtime và mã nguồn.</strong></p>
+    <p>Codespaces là môi trường phát triển đám mây mang bản chất <strong>lai giữa PaaS và SaaS</strong> (nghiêng về <strong>PaaS</strong> ở tầng thực thi): nhà cung cấp (GitHub/Azure) quản lý toàn bộ phần cứng ảo hóa, hệ điều hành Linux và dựng sẵn runtime (Node.js, Docker, JDK); giao diện soạn thảo VS Code trên trình duyệt hoạt động như SaaS; còn sinh viên chỉ tập trung quản lý mã nguồn và dữ liệu ứng dụng.</p>
+
+    <p><strong>Câu 3: Nêu hai hạn chế của cách làm truyền thống (cài môi trường trên từng máy phòng lab) mà bài này đã khắc phục, và một rủi ro mới mà đám mây đưa vào.</strong></p>
+    <ul>
+      <li><strong>Hai hạn chế đã khắc phục:</strong> (1) Tốn thời gian cài đặt thủ công và dễ lệch phiên bản phần mềm giữa các máy phòng lab; (2) Phụ thuộc vào máy tính cố định tại trường, khó mang môi trường đồng nhất về nhà làm tiếp.</li>
+      <li><strong>Một rủi ro mới:</strong> Nguy cơ lộ lọt API ra Internet nếu mở cổng Public mà quên đóng lại, hoặc tiêu tốn hết hạn mức 120 core-giờ miễn phí nếu quên tắt máy ảo sau khi rời bàn làm việc.</li>
+    </ul>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "notes-api-2224801030280",
+  "version": "1.0.0",
+  "description": "Bai 1 - Hello Cloud API",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "express": "^4.21.1"
+  }
+}
