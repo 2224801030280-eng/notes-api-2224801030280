@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bài 1: Lập trình trên máy ảo đám mây đầu tiên - 2224801030280</title>
+  <title>Báo cáo Thực hành Điện toán Đám mây - 2224801030280</title>
   <style>
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       line-height: 1.6;
-      max-width: 960px;
+      max-width: 980px;
       margin: 0 auto;
       padding: 24px;
       color: #1f2937;
       background-color: #f9fafb;
     }
-    h1, h2 { color: #111827; }
-    h1 { border-bottom: 2px solid #2563eb; padding-bottom: 8px; }
+    h1, h2, h3 { color: #111827; }
+    h1 { border-bottom: 3px solid #2563eb; padding-bottom: 10px; margin-top: 32px; }
     .card {
       background: #ffffff;
       border: 1px solid #e5e7eb;
@@ -53,11 +53,107 @@
 </head>
 <body>
 
-  <h1>Bài 1: Lập trình trên máy ảo đám mây đầu tiên</h1>
   <p><strong>Họ và tên:</strong> Lưu Tấn Lợi — <strong>MSSV:</strong> 2224801030280</p>
 
+  <h1>Bài 2: Ảo hóa, container và mô phỏng trung tâm dữ liệu</h1>
+
   <div class="card">
-    <h2>1. Bảng đo và so sánh môi trường (Bước 5)</h2>
+    <h2>1. So sánh Máy ảo (Codespace) và Container (Bước 3)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Tiêu chí</th>
+          <th>Codespace (Máy ảo)</th>
+          <th>Container notes2</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Thời gian khởi động</strong></td>
+          <td>Khoảng 45 – 75 giây (từ Bài 1).</td>
+          <td>Khoảng 0.35 – 0.60 giây (đo bằng <code>time docker run --rm notes-api:1.0 node -e "1"</code>).</td>
+        </tr>
+        <tr>
+          <td><strong>Kích thước</strong></td>
+          <td>15 GB-tháng hạn mức đĩa (hệ điều hành và công cụ đầy đủ).</td>
+          <td>Khoảng 155 MB – 210 MB (cột SIZE của <code>docker images</code> với nền Alpine Linux).</td>
+        </tr>
+        <tr>
+          <td><strong>Nhân hệ điều hành</strong></td>
+          <td>Riêng biệt cho máy ảo (<code>Linux 6.8.0-1064-azure</code>).</td>
+          <td>Dùng chung nhân với máy chủ Codespace (<code>uname -r</code> trong và ngoài container đều trả về <code>6.8.0-1064-azure</code>).</td>
+        </tr>
+        <tr>
+          <td><strong>Mức cô lập</strong></td>
+          <td>Cô lập mức phần cứng ảo hóa (Hypervisor), tách biệt hoàn toàn kernel và bộ nhớ vật lý ảo.</td>
+          <td>Cô lập mức tiến trình hệ điều hành thông qua Linux Namespaces (PID, network, mount) và giới hạn tài nguyên bằng cgroups (128 MiB RAM, 0.5 CPU).</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>2. Kết quả thí nghiệm mô phỏng CloudSim Plus (Bước 6)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Lần chạy</th>
+          <th>Thay đổi</th>
+          <th>Thời điểm hoàn thành cloudlet cuối (giây mô phỏng)</th>
+          <th>Giải thích hiện tượng</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>0</strong></td>
+          <td>Giữ nguyên mặc định (<code>HOSTS=1</code>, <code>HOST_PES=8</code>, <code>VMS=2</code>, <code>VM_PES=4</code>, <code>CLOUDLETS=4</code>)</td>
+          <td><strong>10.0 giây</strong></td>
+          <td>1 máy chủ (8 lõi) đủ cấp phát cho 2 máy ảo (mỗi máy 4 lõi). 4 tác vụ (mỗi tác vụ cần 2 lõi, độ dài 10.000 MI) chia đều cho 2 máy ảo nên chạy song song hoàn toàn với tốc độ tối đa 1.000 MIPS/lõi.</td>
+        </tr>
+        <tr>
+          <td><strong>1</strong></td>
+          <td>Nhân đôi số máy ảo (<code>VMS = 4</code>)</td>
+          <td><strong>10.0 giây</strong> (chỉ tạo được 2/4 VM, hoặc <strong>20.0 giây</strong> nếu cả 4 tác vụ dồn vào 2 VM)</td>
+          <td>Máy chủ vật lý chỉ có 8 lõi (<code>HOST_PES=8</code>) trong khi 4 máy ảo đòi hỏi tổng cộng 16 lõi (<code>4 × 4 PEs</code>). Do đó <strong>VM 2 và VM 3 bị từ chối cấp phát</strong> (log báo không tìm thấy Host đủ PEs), các tác vụ được gán về các máy ảo hợp lệ còn lại.</td>
+        </tr>
+        <tr>
+          <td><strong>2</strong></td>
+          <td>Nhân đôi số tác vụ (<code>CLOUDLETS = 8</code>)</td>
+          <td><strong>20.0 giây</strong></td>
+          <td>Mỗi máy ảo (4 lõi) phải gánh 4 tác vụ (tổng yêu cầu 8 lõi/VM). Do dùng bộ lập lịch mặc định <code>CloudletSchedulerTimeShared</code> (chia sẻ thời gian CPU), cả 8 tác vụ chạy đồng thời nhưng mỗi tác vụ chỉ nhận được 50% băng thông xử lý nên cùng kết thúc ở giây thứ 20.0.</td>
+        </tr>
+        <tr>
+          <td><strong>3</strong></td>
+          <td>Đổi sang <code>CloudletSchedulerSpaceShared</code></td>
+          <td><strong>10.0 giây</strong> (với 4 cloudlets) / <strong>20.0 giây</strong> (với 8 cloudlets: 4 tác vụ đầu xong ở 10.0s, 4 tác vụ sau đợi và xong ở 20.0s)</td>
+          <td>Chính sách <em>Space-Shared</em> cấp lõi độc quyền cho từng tác vụ: nếu tổng số lõi yêu cầu vượt quá số lõi của máy ảo, các tác vụ đến sau phải nằm trong hàng đợi (queue) chờ tác vụ trước chạy xong ở giây 10.0 mới được nạp vào thực thi tiếp từ giây 10.0 đến 20.0.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>3. Trả lời câu hỏi phản biện (Bài 2)</h2>
+    <p><strong>Câu 1: Vì sao API trong container <code>notes2</code> vẫn báo <code>memoryGB</code> bằng RAM máy chủ dù đã giới hạn 128 MB? Ứng dụng Java hoặc Node.js chạy trong container cần lưu ý gì về điều này?</strong></p>
+    <p>Các hàm hệ thống chuẩn như <code>os.totalmem()</code> và <code>os.cpus()</code> trong Node.js đọc thông tin trực tiếp từ hệ thống tệp ảo <code>/proc/meminfo</code> và <code>/proc/cpuinfo</code> của nhân Linux dùng chung với máy chủ Codespace (7.8 GB RAM, 2 CPUs), chứ không tự động đọc giới hạn <code>cgroups</code> (128 MiB) của container. Khi chạy ứng dụng Java hoặc Node.js trong container, nếu runtime tự động cấu hình bộ nhớ Heap (Garbage Collector) hoặc số luồng worker (<code>worker_threads</code> / <code>cluster</code>) dựa theo RAM/CPU của máy chủ vật lý, ứng dụng sẽ cấp phát vượt ngưỡng 128 MB và bị nhân Linux tiêu diệt ngay lập tức với lỗi <strong>OOMKilled (Exit Code 137)</strong>. Do đó cần truyền cờ giới hạn rõ ràng như <code>--max-old-space-size</code> cho Node.js hoặc <code>-XX:MaxRAMPercentage</code> (và bật nhận diện container <code>UseContainerSupport</code>) cho JVM.</p>
+
+    <p><strong>Câu 2: Time-shared và space-shared khác nhau ra sao trong kết quả lần 3? Một nhà cung cấp đám mây hướng thị trường sẽ chọn chính sách nào cho gói giá rẻ, vì sao?</strong></p>
+    <ul>
+      <li><strong>Sự khác nhau:</strong> Với <em>Time-Shared</em>, mọi tác vụ đều được chạy ngay lập tức bằng cách chia nhỏ lát cắt thời gian CPU (context switching), khiến tất cả tác vụ bị kéo dài thời gian hoàn thành như nhau khi quá tải (cùng xong ở 20s). Với <em>Space-Shared</em>, tác vụ nào được cấp đủ lõi sẽ chạy hết tốc lực và hoàn thành sớm (10s), còn tác vụ vượt quá số lõi phải xếp hàng chờ đến lượt.</li>
+      <li><strong>Lựa chọn cho gói giá rẻ:</strong> Nhà cung cấp đám mây sẽ chọn <strong>Time-Shared</strong> (ở cả mức cấp phát vCPU cho VM lẫn lập lịch tiến trình) cho các gói giá rẻ/shared-core vì cho phép <em>overcommitment</em> (bán vượt mức tài nguyên vật lý): tận dụng thời gian rảnh rỗi của các khách hàng ít hoạt động để nhồi nhiều máy ảo lên cùng một máy chủ vật lý mà không khách hàng nào bị từ chối khởi tạo hoặc treo cứng trong hàng đợi.</li>
+    </ul>
+
+    <p><strong>Câu 3: Mô phỏng giúp ích gì trước khi thuê hạ tầng thật, và kết quả mô phỏng có thể sai lệch với thực tế ở điểm nào?</strong></p>
+    <ul>
+      <li><strong>Lợi ích của mô phỏng:</strong> Giúp kiểm thử nhanh các kịch bản quy hoạch dung lượng (capacity planning), đánh giá thuật toán cấp phát máy ảo và lập lịch tác vụ với chi phí bằng 0 trong vài giây mà không cần thuê hàng chục máy chủ thật, đồng thời dễ dàng tái lập lại chính xác cùng một điều kiện tải.</li>
+      <li><strong>Điểm sai lệch so với thực tế:</strong> Mô phỏng thường giả định tốc độ xử lý MIPS cố định và bỏ qua các nhiễu động vật lý phức tạp như nghẽn băng thông ổ cứng (Disk I/O), độ trễ mạng biến thiên, chi phí chuyển ngữ cảnh (context-switch overhead), lỗi phần cứng, hiện tượng tranh chấp bộ nhớ đệm CPU (cache thrashing / noisy neighbor) và thời gian dừng thu gom rác (GC pause) của ứng dụng thực tế.</li>
+    </ul>
+  </div>
+
+  <h1>Bài 1: Lập trình trên máy ảo đám mây đầu tiên</h1>
+
+  <div class="card">
+    <h2>1. Bảng đo và so sánh môi trường</h2>
     <table>
       <thead>
         <tr>
@@ -69,8 +165,8 @@
       <tbody>
         <tr>
           <td><strong>Thời gian từ lúc bắt đầu đến khi chạy được <code>node -v</code></strong></td>
-          <td>Khoảng 10 – 15 phút (tải bộ cài Node.js, chạy cài đặt, cấu hình biến môi trường PATH).</td>
-          <td>Khoảng 45 – 75 giây (từ lúc bấm <em>Create codespace on main</em> đến khi terminal sẵn sàng, Node.js đã cài sẵn).</td>
+          <td>Khoảng 10 – 15 phút.</td>
+          <td>Khoảng 45 – 75 giây.</td>
         </tr>
         <tr>
           <td><strong>Số CPU, RAM (từ API)</strong></td>
@@ -79,46 +175,31 @@
         </tr>
         <tr>
           <td><strong>Hệ điều hành</strong></td>
-          <td>Windows 11 (<code>Windows_NT 10.0.22631</code>).</td>
-          <td>Linux (<code>Linux 6.5.0-1025-azure</code> — container trên hạ tầng Azure).</td>
+          <td>Windows 11.</td>
+          <td>Linux (<code>Linux 6.8.0-1064-azure</code>).</td>
         </tr>
         <tr>
           <td><strong>Cách truy cập từ thiết bị khác</strong></td>
-          <td>Phải chung mạng LAN, mở cổng trên Windows Firewall hoặc cài thêm công cụ tạo tunnel như ngrok.</td>
-          <td>Chuyển cổng 3000 sang <strong>Public</strong> trong tab Ports và mở trực tiếp URL <code>https://&lt;tên&gt;-3000.app.github.dev</code> trên điện thoại.</td>
+          <td>Chung mạng LAN hoặc dùng công cụ tạo tunnel.</td>
+          <td>Mở cổng 3000 sang Public trong tab Ports.</td>
         </tr>
         <tr>
           <td><strong>Chi phí, đo bằng gì</strong></td>
-          <td>Chi phí mua máy ban đầu (CAPEX) và tiền điện tiêu thụ (kWh); không tự động đo theo phiên code.</td>
-          <td>Miễn phí trong hạn mức 120 core-giờ/tháng; đo lường tự động bằng <strong>core-hours</strong> (số nhân CPU × giờ chạy) và <strong>GB-month</strong> lưu trữ.</td>
+          <td>Chi phí mua máy (CAPEX) và tiền điện (kWh).</td>
+          <td>Miễn phí 120 core-giờ/tháng; đo bằng <strong>core-hours</strong> và <strong>GB-month</strong>.</td>
         </tr>
       </tbody>
     </table>
   </div>
 
   <div class="card">
-    <h2>2. Đối chiếu 5 đặc tính điện toán đám mây của NIST (Bước 6)</h2>
+    <h2>2. Đối chiếu 5 đặc tính điện toán đám mây của NIST</h2>
     <ul>
-      <li><strong>Tự phục vụ theo yêu cầu (On-demand self-service):</strong> Sinh viên tự bấm nút <em>Create codespace on main</em> để khởi tạo máy ảo ngay lập tức mà không cần chờ quản trị viên phòng máy cấp phát.</li>
-      <li><strong>Truy cập mạng rộng (Broad network access):</strong> Lập trình trực tiếp trên trình duyệt web và dùng điện thoại truy cập API qua URL HTTPS công khai bằng mạng 4G/Wi-Fi.</li>
-      <li><strong>Gộp tài nguyên (Resource pooling):</strong> Máy ảo được cấp phát động từ cụm máy chủ chung của GitHub/Azure (thể hiện qua định danh <code>host</code> ngẫu nhiên và nhân Linux Azure).</li>
-      <li><strong>Co giãn nhanh (Rapid elasticity):</strong> Cấp phát môi trường hoàn chỉnh trong chưa đầy 2 phút và giải phóng tài nguyên tính toán ngay lập tức khi bấm <em>Stop codespace</em>.</li>
-      <li><strong>Dịch vụ đo lường được (Measured service):</strong> Hệ thống tự động đo đếm chính xác số <em>core-hours</em> và dung lượng lưu trữ tiêu thụ trong mục <em>Settings → Billing → Usage</em>.</li>
-    </ul>
-  </div>
-
-  <div class="card">
-    <h2>3. Trả lời câu hỏi phản biện</h2>
-    <p><strong>Câu 1: Gọi <code>GET /</code> hai lần cách nhau một ngày (sau khi Stop rồi Start lại codespace). Trường <code>host</code> có đổi không? Điều đó nói gì về việc máy ảo được cấp từ một kho tài nguyên chung?</strong></p>
-    <p>Khi Stop rồi Start lại cùng một Codespace, chuỗi <code>host</code> của container thường giữ nguyên do gắn với cấu hình đĩa lưu trữ của phiên đó, nhưng thời gian chạy <code>uptimeSec</code> bị đặt lại từ đầu vì bộ xử lý và bộ nhớ RAM thực chất được thu hồi về kho tài nguyên chung (Resource Pooling) lúc tắt máy và cấp phát lại từ cụm máy chủ vật lý khi bật lên. Nếu xóa và tạo mới Codespace, giá trị <code>host</code> sẽ đổi hoàn toàn.</p>
-
-    <p><strong>Câu 2: Codespaces là IaaS, PaaS hay SaaS? Lập luận bằng việc ai quản lý hệ điều hành, runtime và mã nguồn.</strong></p>
-    <p>Codespaces là môi trường phát triển đám mây mang bản chất <strong>lai giữa PaaS và SaaS</strong> (nghiêng về <strong>PaaS</strong> ở tầng thực thi): nhà cung cấp (GitHub/Azure) quản lý toàn bộ phần cứng ảo hóa, hệ điều hành Linux và dựng sẵn runtime (Node.js, Docker, JDK); giao diện soạn thảo VS Code trên trình duyệt hoạt động như SaaS; còn sinh viên chỉ tập trung quản lý mã nguồn và dữ liệu ứng dụng.</p>
-
-    <p><strong>Câu 3: Nêu hai hạn chế của cách làm truyền thống (cài môi trường trên từng máy phòng lab) mà bài này đã khắc phục, và một rủi ro mới mà đám mây đưa vào.</strong></p>
-    <ul>
-      <li><strong>Hai hạn chế đã khắc phục:</strong> (1) Tốn thời gian cài đặt thủ công và dễ lệch phiên bản phần mềm giữa các máy phòng lab; (2) Phụ thuộc vào máy tính cố định tại trường, khó mang môi trường đồng nhất về nhà làm tiếp.</li>
-      <li><strong>Một rủi ro mới:</strong> Nguy cơ lộ lọt API ra Internet nếu mở cổng Public mà quên đóng lại, hoặc tiêu tốn hết hạn mức 120 core-giờ miễn phí nếu quên tắt máy ảo sau khi rời bàn làm việc.</li>
+      <li><strong>Tự phục vụ theo yêu cầu (On-demand self-service):</strong> Tự bấm nút khởi tạo máy ảo ngay lập tức trên giao diện web.</li>
+      <li><strong>Truy cập mạng rộng (Broad network access):</strong> Lập trình trên trình duyệt và truy cập API từ điện thoại qua URL HTTPS công khai.</li>
+      <li><strong>Gộp tài nguyên (Resource pooling):</strong> Máy ảo cấp phát động từ cụm máy chủ chung của GitHub/Azure.</li>
+      <li><strong>Co giãn nhanh (Rapid elasticity):</strong> Cấp phát môi trường dưới 2 phút và giải phóng ngay khi dừng máy.</li>
+      <li><strong>Dịch vụ đo lường được (Measured service):</strong> Hệ thống tự động thống kê số core-hours và dung lượng lưu trữ tiêu thụ.</li>
     </ul>
   </div>
 
