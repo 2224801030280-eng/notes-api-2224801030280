@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bài 3: Lưu trữ phân tán - NoSQL & Object Storage - 2224801030280</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; max-width: 1000px; margin: 0 auto; padding: 24px; color: #1f2937; background: #f9fafb; }
+    h1 { color: #111827; border-bottom: 3px solid #2563eb; padding-bottom: 10px; }
+    h2 { color: #1e3a8a; margin-top: 0; }
+    .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { border: 1px solid #d1d5db; padding: 10px 12px; text-align: left; vertical-align: top; }
+    th { background: #eff6ff; color: #1e40af; }
+    tr:nth-child(even) { background: #f8fafc; }
+    code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+    .svg-wrap { overflow-x: auto; text-align: center; margin: 16px 0; }
+    .nav { margin-bottom: 16px; }
+    .nav a { color: #2563eb; text-decoration: none; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="nav"><a href="./index.html">← Quay lại Báo cáo Bài 1 &amp; Bài 2</a></div>
+  <p><strong>Họ và tên:</strong> Lưu Tấn Lợi — <strong>MSSV:</strong> 2224801030280</p>
+  <h1>Bài 3: Lưu trữ phân tán — NoSQL (MongoDB Atlas) và Lưu trữ đối tượng (Supabase)</h1>
+
+  <div class="card">
+    <h2>1. Kết quả đo hiệu quả chỉ mục trên 2.000 tài liệu (scripts/explain.js)</h2>
+    <table>
+      <thead>
+        <tr><th>Chiến lược truy vấn (<code>tags: 'docker'</code>)</th><th>Stage thực thi</th><th>docsExamined</th><th>returned</th><th>Nhận xét</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Quét toàn bộ (<code>hint({ $natural: 1 })</code>)</strong></td><td><code>COLLSCAN</code></td><td><strong>2.000</strong></td><td>571</td><td>Phải đọc toàn bộ 100% tài liệu trong collection để lọc.</td></tr>
+        <tr><td><strong>Dùng chỉ mục (<code>noteSchema.index({ tags: 1 })</code>)</strong></td><td><code>IXSCAN → FETCH</code></td><td><strong>571</strong></td><td>571</td><td>Chỉ nạp đúng 571 tài liệu khớp chỉ mục B-Tree (Multikey Index).</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Tỉ số giảm khối lượng quét:</strong> <code>2000 / 571 ≈ 3.50 lần</code> (giảm hơn <strong>71,4%</strong> số tài liệu phải đọc từ bộ nhớ/đĩa).</p>
+  </div>
+  <div class="card">
+    <h2>2. Sơ đồ so sánh nhân bản: MongoDB Atlas (Replica Set 3 nút) và HDFS</h2>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 920 340" width="900" height="332" xmlns="http://www.w3.org/2000/svg" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;">
+        <rect x="15" y="15" width="430" height="310" rx="10" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+        <text x="230" y="42" text-anchor="middle" font-weight="bold" font-size="16" fill="#166534">MongoDB Atlas (Replica Set - 3 nút)</text>
+        <rect x="145" y="65" width="170" height="58" rx="8" fill="#16a34a"/>
+        <text x="230" y="90" text-anchor="middle" font-weight="bold" font-size="14" fill="#fff">PRIMARY NODE</text>
+        <text x="230" y="110" text-anchor="middle" font-size="12" fill="#dcfce7">Nhận Ghi (Write) &amp; Đọc</text>
+        <line x1="185" y1="123" x2="120" y2="188" stroke="#15803d" stroke-width="2.5"/>
+        <line x1="275" y1="123" x2="340" y2="188" stroke="#15803d" stroke-width="2.5"/>
+        <text x="230" y="162" text-anchor="middle" font-size="11" fill="#166534" font-weight="bold">Nhân bản bất đồng bộ qua Oplog</text>
+        <rect x="35" y="190" width="175" height="65" rx="8" fill="#ffffff" stroke="#16a34a" stroke-width="2"/>
+        <text x="122" y="215" text-anchor="middle" font-weight="bold" font-size="13" fill="#166534">SECONDARY 1</text>
+        <text x="122" y="235" text-anchor="middle" font-size="11" fill="#374151">Bản sao toàn bộ DB (Dự phòng)</text>
+        <rect x="250" y="190" width="175" height="65" rx="8" fill="#ffffff" stroke="#16a34a" stroke-width="2"/>
+        <text x="337" y="215" text-anchor="middle" font-weight="bold" font-size="13" fill="#166534">SECONDARY 2</text>
+        <text x="337" y="235" text-anchor="middle" font-size="11" fill="#374151">Bản sao toàn bộ DB (Bầu cử)</text>
+        <line x1="210" y1="222" x2="250" y2="222" stroke="#16a34a" stroke-dasharray="4,3" stroke-width="2"/>
+        <text x="230" y="285" text-anchor="middle" font-size="12" fill="#14532d">Heartbeat &amp; bầu Primary mới (Quorum ≥ 2/3 nút)</text>
+        <text x="230" y="305" text-anchor="middle" font-size="11" fill="#374151">Đơn vị nhân bản: Toàn bộ bản ghi / Oplog</text>
+
+        <rect x="475" y="15" width="430" height="310" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+        <text x="690" y="42" text-anchor="middle" font-weight="bold" font-size="16" fill="#1e40af">HDFS (NameNode &amp; DataNodes - Hệ số 3)</text>
+        <rect x="590" y="65" width="200" height="58" rx="8" fill="#2563eb"/>
+        <text x="690" y="90" text-anchor="middle" font-weight="bold" font-size="14" fill="#fff">NAMENODE (Master)</text>
+        <text x="690" y="110" text-anchor="middle" font-size="12" fill="#dbeafe">Quản lý Metadata &amp; vị trí Block</text>
+        <line x1="640" y1="123" x2="555" y2="188" stroke="#1d4ed8" stroke-width="2" stroke-dasharray="4,3"/>
+        <line x1="690" y1="123" x2="690" y2="188" stroke="#1d4ed8" stroke-width="2" stroke-dasharray="4,3"/>
+        <line x1="740" y1="123" x2="825" y2="188" stroke="#1d4ed8" stroke-width="2" stroke-dasharray="4,3"/>
+        <text x="690" y="162" text-anchor="middle" font-size="11" fill="#1e40af" font-weight="bold">Heartbeat &amp; Block Report (chỉ quản lý siêu dữ liệu)</text>
+        <rect x="495" y="190" width="120" height="72" rx="8" fill="#fff" stroke="#2563eb" stroke-width="2"/>
+        <text x="555" y="212" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">DataNode 1</text>
+        <text x="555" y="232" text-anchor="middle" font-size="11" fill="#1d4ed8">[Blk A] [Blk B]</text>
+        <text x="555" y="250" text-anchor="middle" font-size="10" fill="#6b7280">Rack 1</text>
+        <rect x="630" y="190" width="120" height="72" rx="8" fill="#fff" stroke="#2563eb" stroke-width="2"/>
+        <text x="690" y="212" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">DataNode 2</text>
+        <text x="690" y="232" text-anchor="middle" font-size="11" fill="#1d4ed8">[Blk A] [Blk C]</text>
+        <text x="690" y="250" text-anchor="middle" font-size="10" fill="#6b7280">Rack 2</text>
+        <rect x="765" y="190" width="120" height="72" rx="8" fill="#fff" stroke="#2563eb" stroke-width="2"/>
+        <text x="825" y="212" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e3a8a">DataNode 3</text>
+        <text x="825" y="232" text-anchor="middle" font-size="11" fill="#1d4ed8">[Blk A] [Blk B]</text>
+        <text x="825" y="250" text-anchor="middle" font-size="10" fill="#6b7280">Rack 2</text>
+        <text x="690" y="288" text-anchor="middle" font-size="12" fill="#1e3a8a">Nhân bản pipeline: DN1 → DN2 → DN3 (3 bản sao/block)</text>
+        <text x="690" y="306" text-anchor="middle" font-size="11" fill="#374151">Đơn vị nhân bản: Từng khối dữ liệu (Block 128 MB)</text>
+      </svg>
+    </div>
+    <table>
+      <thead><tr><th>Tiêu chí</th><th>MongoDB Atlas (Replica Set)</th><th>HDFS (NameNode / DataNodes)</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Điểm giống nhau</strong></td><td colspan="2">Đều nhân bản mặc định thành <strong>3 bản sao</strong>, dùng cơ chế <strong>Heartbeat</strong> giám sát sức khỏe nút và tự động phục hồi (failover / re-replication) khi 1 nút gặp sự cố.</td></tr>
+        <tr><td><strong>Đơn vị nhân bản</strong></td><td>Toàn bộ dữ liệu cơ sở dữ liệu thông qua nhật ký thao tác (<code>oplog</code>).</td><td>Từng khối tệp cố định (<strong>Block 128 MB</strong>) phân tán qua nhiều Rack.</td></tr>
+        <tr><td><strong>Kiến trúc điều phối</strong></td><td>Không có Master tách rời dữ liệu; 1 nút giữ vai Primary, mất Primary thì 2 nút còn lại tự bầu chọn.</td><td>Tách biệt rõ <strong>NameNode</strong> (chỉ giữ metadata trong RAM) và <strong>DataNodes</strong> (lưu trữ khối dữ liệu thực).</td></tr>
+        <tr><td><strong>Bài toán tối ưu</strong></td><td>Truy vấn CRUD ngẫu nhiên, độ trễ thấp (OLTP), dữ liệu tài liệu JSON/BSON.</td><td>Lưu trữ tệp siêu lớn (TB–PB), ghi một lần đọc tuần tự nhiều lần (Batch / Big Data).</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <h2>3. Trả lời câu hỏi phản biện (Bài 3)</h2>
+    <p><strong>Câu 1: Với 2.000 tài liệu, chênh lệch thời gian giữa hai cách truy vấn nhỏ. Dựa vào <code>docsExamined</code>, ước lượng điều gì xảy ra khi bộ sưu tập có 2 triệu tài liệu và gói miễn phí giới hạn 100 thao tác/giây.</strong></p>
+    <p>Khi tăng quy mô lên 1.000 lần (2.000.000 tài liệu): phương án quét toàn bộ (<code>COLLSCAN</code>) phải đọc đủ <strong>2.000.000 tài liệu</strong> cho mỗi yêu cầu <code>GET /notes?tag=docker</code>. Với giới hạn RAM chia sẻ và 100 ops/giây của gói M0, toàn bộ tập dữ liệu sẽ vượt xa bộ đệm RAM (Working Set), buộc MongoDB phải đọc đĩa liên tục (disk I/O thrashing). Thời gian phản hồi tăng từ vài mili-giây lên hàng giây đến chục giây; nếu chỉ có vài chục yêu cầu đồng thời, hàng đợi kết nối sẽ nhanh chóng chạm trần 100 ops/giây dẫn tới quá tải CPU và lỗi timeout hàng loạt. Ngược lại, có chỉ mục B-Tree (<code>IXSCAN</code>) giúp giảm ngay ~3,5 lần số tài liệu đọc (và có thể giảm hàng trăm đến hàng nghìn lần nếu thẻ có độ chọn lọc cao), giúp hệ thống duy trì độ trễ thấp và không lãng phí hạn mức I/O.</p>
+
+    <p><strong>Câu 2: Vì sao lưu tệp trên Supabase Storage rồi chỉ lưu URL trong MongoDB, thay vì lưu thẳng nội dung tệp vào tài liệu MongoDB?</strong></p>
+    <ul>
+      <li><strong>Giới hạn dung lượng và kích thước tài liệu:</strong> MongoDB giới hạn tối đa <strong>16 MB</strong> cho mỗi tài liệu BSON và gói Atlas M0 chỉ cấp <strong>0,5 GB</strong> toàn bộ CSDL (còn Supabase Storage cấp riêng <strong>1 GB</strong> miễn phí chuyên cho tệp).</li>
+      <li><strong>Bảo vệ bộ nhớ đệm (WiredTiger Cache):</strong> Nhét tệp nhị phân lớn vào tài liệu sẽ đẩy các chỉ mục và dữ liệu JSON nóng ra khỏi RAM cache, làm chậm toàn bộ truy vấn CRUD.</li>
+      <li><strong>Tối ưu phân phối và băng thông:</strong> Object Storage (Supabase Storage/S3) hỗ trợ trả tệp trực tiếp qua HTTP/CDN, caching, streaming và băng thông cao mà không làm nghẽn tiến trình Node.js hay giới hạn 100 ops/giây của MongoDB.</li>
+    </ul>
+
+    <p><strong>Câu 3: Atlas nhân bản 3 nút; HDFS mặc định nhân bản 3 khối. Mục tiêu chung của con số 3 là gì, và hai hệ thống khác nhau ở đơn vị nhân bản ra sao?</strong></p>
+    <ul>
+      <li><strong>Mục tiêu chung của con số 3:</strong> Đạt đồng thời <strong>độ bền dữ liệu (durability)</strong> và <strong>tính sẵn sàng cao (high availability)</strong> với chi phí tối ưu. Số lẻ 3 là con số nhỏ nhất thỏa mãn cơ chế đa số (<em>Quorum</em> = ⌊3/2⌋ + 1 = 2): khi 1 nút hoặc 1 ổ đĩa/rack hỏng, 2 bản sao còn lại vẫn đủ đa số để tiếp tục phục vụ an toàn mà tránh được tình trạng chia tách mạng (<em>split-brain</em>) như khi chỉ có 2 nút.</li>
+      <li><strong>Khác nhau ở đơn vị nhân bản:</strong> MongoDB Atlas nhân bản ở mức <strong>toàn bộ cơ sở dữ liệu / tập bản ghi</strong> (mỗi nút Secondary chứa đủ một bản sao dữ liệu đồng bộ từ Primary qua <code>oplog</code> để sẵn sàng lên thay thế tức thì); trong khi HDFS chia tệp lớn thành các <strong>khối cố định (block, mặc định 128 MB)</strong> và nhân bản từng khối riêng lẻ rải đều lên các DataNode ở nhiều Rack khác nhau (không có một DataNode nào cần chứa toàn bộ dữ liệu cụm).</li>
+    </ul>
+  </div>
+</body>
+</html>
